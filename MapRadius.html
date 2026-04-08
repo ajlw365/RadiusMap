@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Color Radius Map</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; margin: 20px; background: #f4f4f9; }
+        #map { height: 75vh; width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .controls { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; gap: 20px; }
+        input[type=range] { flex-grow: 1; }
+        .legend { display: flex; gap: 15px; font-size: 14px; margin-top: 10px; }
+        .dot { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <div>Radius: <span id="radius-val">10</span> km</div>
+        <input type="range" id="radius-slider" min="1" max="50" value="10" step="0.5">
+        <div class="legend">
+            <span><span class="dot" style="background-color: #FF0000;"></span>A&S</span>
+            <span><span class="dot" style="background-color: #00FF00;"></span>K</span>
+            <span><span class="dot" style="background-color: #0000FF;"></span>B&S</span>
+        </div>
+    </div>
+
+    <div id="map"></div>
+
+    <script>
+        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Re-writing library load."):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
+            key: "AIzaSyCOtiKRJge7dgTUTxqbmYXMrUhWsFvECRU", // Paste your key (no key= prefix)
+            v: "weekly",
+        });
+
+        let circles = [];
+
+        async function initMap() {
+            const { Map } = await google.maps.importLibrary("maps");
+            const { AdvancedMarkerElement } = await google.maps.importLibrary("marker");
+
+            const map = new google.maps.Map(document.getElementById("map"), {
+                zoom: 10,
+                center: { lat: -31.85, lng: 115.82 },
+                mapId: "DEMO_MAP_ID", 
+            });
+
+            const locations = [
+                { label: "A&S", color: "#FF0000", pos: { lat: -31.9056, lng: 115.8115 } }, // Osborne Park
+                { label: "K", color: "#00FF00", pos: { lat: -31.9967, lng: 115.8034 } },   // Dalkeith
+                { label: "B&S", color: "#0000FF", pos: { lat: -31.7378, lng: 115.8234 } }  // Sinagra
+            ];
+
+            locations.forEach(loc => {
+                new AdvancedMarkerElement({
+                    map: map,
+                    position: loc.pos,
+                    title: loc.label,
+                });
+
+                const circle = new google.maps.Circle({
+                    strokeColor: loc.color,
+                    strokeOpacity: 0.8,
+                    strokeWeight: 2,
+                    fillColor: loc.color,
+                    fillOpacity: 0.15,
+                    map: map,
+                    center: loc.pos,
+                    radius: 10000 
+                });
+                circles.push(circle);
+            });
+
+            document.getElementById('radius-slider').addEventListener('input', function() {
+                const km = parseFloat(this.value);
+                document.getElementById('radius-val').innerText = km;
+                circles.forEach(c => c.setRadius(km * 1000));
+            });
+        }
+
+        initMap();
+    </script>
+</body>
+</html>
